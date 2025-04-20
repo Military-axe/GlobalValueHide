@@ -1,5 +1,6 @@
 #pragma once
 
+#include "algebraic_substitution/substitutionChoose.h"
 #include "prelude.h"
 #include <llvm/IR/Function.h>
 #include <llvm/IR/GlobalVariable.h>
@@ -9,6 +10,10 @@
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
 #include <sys/stat.h>
+
+// Forward Declaration AlgebraicSubstitutionInterface from
+// algebraic_substitution/substitution.h
+class AlgebraicSubstitutionInterface;
 
 namespace global_value_hide {
 
@@ -25,10 +30,15 @@ private:
   llvm::LLVMContext &ctx_;
 
 public:
+  /// @brief A unique pointer to the substitution algorithm.
+  std::unique_ptr<AlgebraicSubstitutionChoose> substitution_;
+
   /// @brief Constructs a GlobalValueReplacer with the given LLVM context.
   ///
   /// @param ctx The LLVM context associated with the current module.
-  GlobalValueReplacer(llvm::LLVMContext &ctx) : ctx_(ctx) {};
+  GlobalValueReplacer(llvm::LLVMContext &ctx) : ctx_(ctx) {
+    substitution_ = std::make_unique<AlgebraicSubstitutionChoose>();
+  };
 
   /// @brief Replaces encrypted global values and functions in the IR.
   ///
@@ -39,24 +49,6 @@ public:
   /// @param funcs Container of encrypted function metadata.
   void replace(const EncGvsInfo &gvs, const EncFunsInfo &funcs);
 };
-
-/// @brief Decrypts an encrypted value using a runtime-generated key.
-///
-/// Generates a complex decryption sequence involving arithmetic operations,
-/// random constants, and anti-optimization techniques to obscure the
-/// decryption logic. The result is a dynamically computed address.
-///
-/// @param IRB       IRBuilder for inserting decryption instructions.
-/// @param encrypted Encrypted value (global variable or function address).
-/// @param key       Constant encryption key used in the decryption formula.
-/// @param ctx       LLVM context for type creation.
-/// @return          Value* representing the decrypted address.
-///
-/// @note Implements anti-optimization measures:
-/// - Fake memory dependencies via volatile loads
-/// - Unpredictable instruction sequences with random XOR/ADD operations
-llvm::Value *decryptValue(llvm::IRBuilder<> &IRB, llvm::Value *encrypted,
-                          llvm::Constant *key, llvm::LLVMContext &ctx);
 
 /// @brief Template trait for replacing specific types of encrypted values.
 ///
@@ -69,7 +61,8 @@ template <typename T> struct ReplaceTrait {
   ///
   /// @param ctx LLVM context for IR modifications.
   /// @param ev  Metadata containing the original value, encrypted GV, and key.
-  static void replace(llvm::LLVMContext &ctx, const EncryptedValue<T> &ev);
+  static void replace(llvm::LLVMContext &ctx, const EncryptedValue<T> &ev,
+                      AlgebraicSubstitutionInterface &sub);
 };
 
 /// @brief Specialization of ReplaceTrait for GlobalVariable replacement.
@@ -87,7 +80,8 @@ template <> struct ReplaceTrait<llvm::GlobalVariable> {
   ///
   /// @param ctx LLVM context for type creation.
   /// @param ev  EncryptedGlobalVar metadata with index, key, and GV pointers.
-  static void replace(llvm::LLVMContext &ctx, const EncGv &ev) {
+  static void replace(llvm::LLVMContext &ctx, const EncGv &ev,
+                      AlgebraicSubstitutionInterface &sub) {
     auto encGV = ev.encryptedGV;
 
     for (auto user : ev.originalValue->users()) {
@@ -101,7 +95,7 @@ template <> struct ReplaceTrait<llvm::GlobalVariable> {
         llvm::Value *encrypted = IRB.CreateLoad(
             llvm::PointerType::get(llvm::Type::getInt8Ty(ctx), 0), gep,
             ev.originalValue->getName() + "__encrypted");
-        auto gvAddr = decryptValue(IRB, encrypted, ev.encryptionKey, ctx);
+        auto gvAddr = sub.substitution(IRB, encrypted, ev.encryptionKey, ctx);
 
         inst->replaceUsesOfWith(ev.originalValue, gvAddr);
       }
@@ -124,7 +118,8 @@ template <> struct ReplaceTrait<llvm::Function> {
   ///
   /// @param ctx LLVM context for type creation.
   /// @param ev  EncryptedFunction metadata with index, key, and GV pointers.
-  static void replace(llvm::LLVMContext &ctx, const EncFun &ev) {
+  static void replace(llvm::LLVMContext &ctx, const EncFun &ev,
+                      AlgebraicSubstitutionInterface &sub) {
     auto encGV = ev.encryptedGV;
     auto key = ev.encryptionKey;
 
@@ -146,7 +141,7 @@ template <> struct ReplaceTrait<llvm::Function> {
           IRB.CreateLoad(llvm::PointerType::get(llvm::Type::getInt8Ty(ctx), 0),
                          gep, ev.originalValue->getName() + "_encrypted");
 
-      auto decrypted = decryptValue(IRB, encrypted, key, ctx);
+      auto decrypted = sub.substitution(IRB, encrypted, key, ctx);
       auto funcPtr = IRB.CreateBitCast(
           decrypted, ev.originalValue->getFunctionType()->getPointerTo());
 

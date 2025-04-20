@@ -1,4 +1,4 @@
-utils_src = ['utils.cc']
+utils_src = files('utils.cc')
 
 utils_lib = static_library(
     'utils',
