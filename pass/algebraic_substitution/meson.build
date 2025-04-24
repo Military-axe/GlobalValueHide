@@ -3,7 +3,7 @@ src_files = files(
   'sub1.cc',
 )
 
-llvm_dep = dependency('llvm', version: '>=19.0')
+llvm_dep = get_variable('llvm_dep')
 
 substitution_lib = static_library(
   'substitution_lib',
