@@ -6,7 +6,6 @@
 #include <llvm/IR/SymbolTableListTraits.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Passes/PassBuilder.h>
-#include <spdlog/spdlog.h>
 
 using namespace llvm;
 
