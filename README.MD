@@ -14,17 +14,17 @@ The obfuscation process consists of two parts:
 
 To customize the obfuscation expression, only modify the second part of the substitution logic. Edit the replacement code in the pass/algebraic_substitution directory.
 
-## 效果
+## Preview
 
-Before obfuscation: as shown in![1.png](./img/1.png)所示
+Before obfuscation: as shown in![1.png](./img/1.png)
 
-After obfuscation: as shown in![2.png](./img/2.png)所示
+After obfuscation: as shown in![2.png](./img/2.png)
 
-## 依赖
+## Dependencies
 
 Requires LLVM 19 and CMake to be installed.
 
-## 编译
+## Compile
 
 This project is developed for LLVM 19. For other LLVM versions, modify the LLVM and Clang++ versions in the root directory's CMakeLists.txt.
 
