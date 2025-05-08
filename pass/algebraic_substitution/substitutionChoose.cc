@@ -1,7 +1,7 @@
 #include "substitutionChoose.h"
 #include "sub1.h"
+#include "utils.h"
 #include <memory>
-#include <random>
 
 namespace global_value_hide {
 
@@ -17,18 +17,11 @@ AlgebraicSubstitutionChoose::AlgebraicSubstitutionChoose() {
   subs_ = collectorSubstitution();
 }
 
-AlgebraicSubstitutionInterface& AlgebraicSubstitutionChoose::choose() {
+AlgebraicSubstitutionInterface &AlgebraicSubstitutionChoose::choose() {
   // choose random substitution
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dis(0, subs_.size() - 1);
-  int randomIndex = dis(gen);
-
-  if (subs_.empty()) {
-    throw std::out_of_range("AlgebraicSubstitution is empty");
-  }
-
-  return *subs_[randomIndex];
+  static utils::RandomEngine rand;
+  auto &ref = rand.getRandomRef(subs_);
+  return *ref;
 }
 
 } // namespace global_value_hide

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <random>
+#include <stdexcept>
 #include <vector>
 
 namespace utils {
@@ -58,5 +59,27 @@ public:
   /// @param maxVal Inclusive upper bound of the range
   /// @return Random value in [begin, end] range
   uint64_t getRange(uint64_t minVal, uint64_t maxVal);
+
+  /// @brief Generate random element from a container
+  /// @tparam Iterable Container type
+  /// @param iterable Container to sample from
+  /// @return Random element from the container
+  template <typename Iterable> auto& getRandomRef(const Iterable &iterable) {
+    auto begin = std::begin(iterable);
+    auto end = std::end(iterable);
+  
+    if (begin == end) {
+        throw std::invalid_argument("Iterable cannot be empty.");
+    }
+  
+    using diff_type = typename std::iterator_traits<decltype(begin)>::difference_type;
+    auto size = std::distance(begin, end);
+  
+    std::uniform_int_distribution<diff_type> dist(0, size - 1);
+    auto index = dist(engine);
+  
+    std::advance(begin, index);
+    return *begin;
+  }
 };
 } // namespace utils
