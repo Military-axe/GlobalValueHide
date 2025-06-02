@@ -1,6 +1,6 @@
 #pragma once
 
-#include "substitution.h"
+#include "pass/algebraic_substitution/substitution.h"
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 

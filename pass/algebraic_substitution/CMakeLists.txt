@@ -1,6 +1,7 @@
-# pass/algebraic_substitution/CMakeLists.txt
+add_subdirectory(sub1)
+add_subdirectory(sub2)
+
 add_library(substitution_lib STATIC
-  sub1.cc
   substitutionChoose.cc
 )
 
@@ -13,7 +14,9 @@ target_include_directories(substitution_lib PUBLIC
   ${LLVM_INCLUDE_DIRS}
 )
 
-target_link_libraries(substitution_lib PUBLIC
+target_link_libraries(substitution_lib PRIVATE
+  sub1_lib
+  sub2_lib
   utils
   ${LLVM_LIBRARIES}
 )

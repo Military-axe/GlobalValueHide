@@ -1,5 +1,7 @@
 #include "substitutionChoose.h"
-#include "sub1.h"
+#include "sub1/sub1.h"
+#include "sub2/sub2.h"
+#include "substitution.h"
 #include "utils.h"
 #include <memory>
 
@@ -9,6 +11,7 @@ AlgSubList AlgebraicSubstitutionChoose::collectorSubstitution() {
   // Add new substitution here
   AlgSubList subs;
   subs.emplace_back(std::make_unique<Sub1>());
+  subs.emplace_back(std::make_unique<Sub2>());
 
   return subs;
 }

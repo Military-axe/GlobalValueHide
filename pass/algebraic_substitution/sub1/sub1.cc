@@ -32,6 +32,7 @@ Value *Sub1::substitution(llvm::IRBuilder<> &IRB, llvm::Value *encrypted,
   Value *keyVal = IRB.CreatePtrToInt(key, Type::getInt64Ty(ctx));
 
   // Construct complex calculation using random constants
+  // base + (randC - (key + randA) ^ randB) + randD
   Value *calc1 = IRB.CreateAdd(keyVal, IRB.getInt64(randA));
   calc1 = IRB.CreateXor(calc1, IRB.getInt64(randB));
   Value *calc2 = IRB.CreateSub(IRB.getInt64(randC), calc1);
